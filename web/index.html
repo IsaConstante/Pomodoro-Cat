@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pomodoro Timer 🐱</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #f9e4a8;
+            overflow: hidden;
+            width: 420px;
+            height: 620px;
+        }
+
+        /* Barra de título customizada */
+        .title-bar {
+            background: linear-gradient(180deg, #ffd966 0%, #f9c74f 100%);
+            padding: 8px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #c49000;
+            cursor: move;
+        }
+
+        .title-text {
+            font-size: 14px;
+            font-weight: bold;
+            color: #8b5a00;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .window-controls {
+            display: flex;
+            gap: 5px;
+        }
+
+        .control-btn {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #8b5a00;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            background: #ffd966;
+            color: #8b5a00;
+            transition: all 0.2s;
+        }
+
+        .control-btn:hover {
+            background: #ffed4e;
+        }
+
+        .control-btn:active {
+            background: #f9c74f;
+        }
+
+        .minimize-btn::after {
+            content: '─';
+            margin-bottom: 3px;
+        }
+
+        .close-btn::after {
+            content: '×';
+            font-size: 16px;
+        }
+
+        /* Área principal */
+        .app-content {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 18px;
+            height: calc(100vh - 34px);
+            overflow-y: auto;
+        }
+
+        .status-text {
+            background: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #666;
+            border: 2px solid #ddd;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* Container da gatinha e nuvens */
+        .cat-container {
+            position: relative;
+            width: 280px;
+            height: 180px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .cloud {
+            position: absolute;
+            background: white;
+            border-radius: 50px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            animation: float-cloud 4s ease-in-out infinite;
+        }
+
+        .cloud-1 {
+            width: 60px;
+            height: 30px;
+            top: 20px;
+            left: 20px;
+            animation-delay: 0s;
+        }
+
+        .cloud-2 {
+            width: 80px;
+            height: 35px;
+            top: 30px;
+            right: 30px;
+            animation-delay: 1s;
+        }
+
+        .cloud-3 {
+            width: 50px;
+            height: 25px;
+            bottom: 40px;
+            left: 40px;
+            animation-delay: 2s;
+        }
+
+        @keyframes float-cloud {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .cat-character {
+            width: 130px;
+            height: 130px;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+            cursor: pointer;
+            transition: transform 0.3s;
+            z-index: 10;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));
+            animation: cat-bounce 3s ease-in-out infinite;
+        }
+
+        .cat-character:hover {
+            transform: scale(1.1);
+        }
+
+        .cat-character:active {
+            transform: scale(0.95);
+        }
+
+        @keyframes cat-bounce {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            25% { transform: translateY(-5px) rotate(-2deg); }
+            75% { transform: translateY(-5px) rotate(2deg); }
+        }
+
+        /* Timer display grande */
+        .time-display {
+            font-size: 68px;
+            font-weight: bold;
+            color: #5a3a1a;
+            text-shadow: 
+                3px 3px 0px rgba(255,255,255,0.5),
+                -1px -1px 0px rgba(0,0,0,0.1);
+            letter-spacing: -2px;
+            margin: 5px 0;
+        }
+
+        /* Controles */
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin: 8px 0;
+        }
+
+        .control-button {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #8b5a00;
+            background: #ffd966;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            box-shadow: 0 3px 0 #c49000;
+        }
+
+        .control-button:hover {
+            background: #ffed4e;
+        }
+
+        .control-button:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0 #c49000;
+        }
+
+        /* Sessões */
+        .sessions-box {
+            background: white;
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 100%;
+        }
+
+        .sessions-label {
+            font-size: 11px;
+            color: #888;
+            margin-bottom: 5px;
+        }
+
+        .session-icons {
+            font-size: 20px;
+            letter-spacing: 3px;
+        }
+
+        /* Lembrete de água */
+        .water-box {
+            background: linear-gradient(135deg, #a8daff 0%, #6eb5ff 100%);
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 2px solid #4a90d9;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 100%;
+            color: white;
+            font-size: 12px;
+        }
+
+        .water-time {
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 3px;
+        }
+
+        /* Botão de config */
+        .config-btn {
+            background: transparent;
+            border: 2px solid #8b5a00;
+            color: #8b5a00;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+            font-family: 'Courier New', monospace;
+            transition: all 0.2s;
+            margin-top: 5px;
+        }
+
+        .config-btn:hover {
+            background: #8b5a00;
+            color: white;
+        }
+
+        /* Modal de configurações */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #f9e4a8;
+            border: 3px solid #8b5a00;
+            border-radius: 12px;
+            padding: 25px;
+            width: 340px;
+            max-height: 500px;
+            overflow-y: auto;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #8b5a00;
+            margin-bottom: 18px;
+            text-align: center;
+        }
+
+        .config-item {
+            margin: 15px 0;
+        }
+
+        .config-item label {
+            display: block;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 6px;
+            font-weight: bold;
+        }
+
+        .config-item input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #8b5a00;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: 'Courier New', monospace;
+            background: white;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #8b5a00;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .modal-btn.save {
+            background: #ffd966;
+            color: #8b5a00;
+        }
+
+        .modal-btn.cancel {
+            background: white;
+            color: #8b5a00;
+        }
+
+        .modal-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* Notificação */
+        .notification {
+            position: fixed;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: 2px solid #8b5a00;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            display: none;
+            animation: notification-pop 0.3s;
+            z-index: 2000;
+            text-align: center;
+        }
+
+        .notification.active {
+            display: block;
+        }
+
+        @keyframes notification-pop {
+            0% {
+                transform: translateX(-50%) scale(0.8);
+                opacity: 0;
+            }
+            100% {
+                transform: translateX(-50%) scale(1);
+                opacity: 1;
+            }
+        }
+
+        .notif-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #8b5a00;
+            margin-bottom: 3px;
+        }
+
+        .notif-message {
+            font-size: 11px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <!-- Barra de título -->
+    <div class="title-bar">
+        <div class="title-text">
+            <span>🐱</span>
+            <span>Pomodoro Timer</span>
+        </div>
+        <div class="window-controls">
+            <div class="control-btn minimize-btn" onclick="minimizeWindow()"></div>
+            <div class="control-btn close-btn" onclick="closeWindow()"></div>
+        </div>
+    </div>
+
+    <!-- Conteúdo do app -->
+    <div class="app-content">
+        <div class="status-text" id="statusText">Sua gatinha está pronta para começar...</div>
+
+        <!-- Container com gatinha e nuvens -->
+        <div class="cat-container">
+            <div class="cloud cloud-1"></div>
+            <div class="cloud cloud-2"></div>
+            <div class="cloud cloud-3"></div>
+            <img id="catImage" class="cat-character" src="assets/idle.png" alt="Gatinha" onclick="petCat()">
+        </div>
+
+        <!-- Timer grande -->
+        <div class="time-display" id="timeDisplay">25:00</div>
+
+        <!-- Controles -->
+        <div class="controls">
+            <div class="control-button" onclick="startTimer()" title="Iniciar">▶</div>
+            <div class="control-button" onclick="pauseTimer()" title="Pausar">⏸</div>
+            <div class="control-button" onclick="stopTimer()" title="Parar">⏹</div>
+            <div class="control-button" onclick="resetTimer()" title="Resetar">↻</div>
+        </div>
+
+        <!-- Sessões -->
+        <div class="sessions-box">
+            <div class="sessions-label">Sessões completadas hoje:</div>
+            <div class="session-icons" id="sessionDisplay">🐾🐾🐾🐾</div>
+        </div>
+
+        <!-- Lembrete de água -->
+        <div class="water-box">
+            <div>💧 Próximo lembrete de água:</div>
+            <div class="water-time" id="waterTimer">30:00</div>
+        </div>
+
+        <button class="config-btn" onclick="openConfig()">⚙ Configurações</button>
+    </div>
+
+    <!-- Modal de configurações -->
+    <div class="modal" id="configModal">
+        <div class="modal-content">
+            <div class="modal-title">⚙ Configurações</div>
+            <div class="config-item">
+                <label>Tempo de Trabalho (min):</label>
+                <input type="number" id="workTime" value="25" min="1" max="60">
+            </div>
+            <div class="config-item">
+                <label>Intervalo Curto (min):</label>
+                <input type="number" id="shortBreak" value="5" min="1" max="30">
+            </div>
+            <div class="config-item">
+                <label>Intervalo Longo (min):</label>
+                <input type="number" id="longBreak" value="15" min="1" max="60">
+            </div>
+            <div class="config-item">
+                <label>Sessões até intervalo longo:</label>
+                <input type="number" id="sessionsUntilLong" value="4" min="1" max="10">
+            </div>
+            <div class="config-item">
+                <label>Lembrete de água (min):</label>
+                <input type="number" id="waterInterval" value="30" min="5" max="120">
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn cancel" onclick="closeConfig()">Cancelar</button>
+                <button class="modal-btn save" onclick="saveConfig()">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notificação -->
+    <div class="notification" id="notification">
+        <div class="notif-title" id="notifTitle"></div>
+        <div class="notif-message" id="notifMessage"></div>
+    </div>
+
+    <audio id="notificationSound" src="assets/meow-1.wav"></audio>
+    <audio id="notificationAngrySound" src="assets/meow-1.wav"></audio>
+
+    <script>
+        // Estados da gatinha
+        const catImages = {
+            idle: 'assets/idle.png',
+            blink: 'assets/blink.png',
+            angry: 'assets/angry.png'
+        };
+
+        const catImg = document.getElementById('catImage');
+        let currentCatState = 'idle';
+
+        const statusMessages = {
+            'work': 'Focando no trabalho...',
+            'short_break': 'Hora do intervalo! ☕',
+            'long_break': 'Descansando bastante! 🌟'
+        };
+
+        function setCatState(state, duration) {
+            currentCatState = state;
+            catImg.src = catImages[state] || catImages.idle;
+            
+            if (duration) {
+                setTimeout(() => {
+                    currentCatState = 'idle';
+                    catImg.src = catImages.idle;
+                }, duration);
+            }
+        }
+
+        function petCat() {
+            setCatState('angry', 800);
+            showNotification('Miau! 🐱', 'Gatinha brava!');
+            play_notification_sound(Audio)
+        }
+
+        // Piscar aleatório
+        setInterval(() => {
+            if (Math.random() < 0.15 && currentCatState === 'idle') {
+                setCatState('blink', 500);
+            }
+        }, 3000);
+
+        // Controles do timer
+        function startTimer() {
+            window.pywebview.api.start_timer();
+            setCatState('angry', 600);
+        }
+
+        function pauseTimer() {
+            window.pywebview.api.pause_timer();
+            setCatState('blink', 400);
+        }
+
+        function stopTimer() {
+            window.pywebview.api.stop_timer();
+            setCatState('idle');
+        }
+
+        async function resetTimer() {
+            await window.pywebview.api.reset_timer();
+            updateTimerDisplay();
+        }
+
+        // Configurações
+        function openConfig() {
+            document.getElementById('configModal').classList.add('active');
+        }
+
+        function closeConfig() {
+            document.getElementById('configModal').classList.remove('active');
+        }
+
+        async function saveConfig() {
+            const work = parseInt(document.getElementById('workTime').value);
+            const short = parseInt(document.getElementById('shortBreak').value);
+            const long = parseInt(document.getElementById('longBreak').value);
+            const sessions = parseInt(document.getElementById('sessionsUntilLong').value);
+            const water = parseInt(document.getElementById('waterInterval').value);
+            
+            await window.pywebview.api.update_config(work, short, long, sessions, water);
+            closeConfig();
+            updateTimerDisplay();
+        }
+
+        // Atualizar display
+        async function updateTimerDisplay() {
+            const state = await window.pywebview.api.get_timer_state();
+            const mins = Math.floor(state.current_time / 60);
+            const secs = state.current_time % 60;
+            document.getElementById('timeDisplay').textContent = 
+                `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            
+            document.getElementById('statusText').textContent = 
+                statusMessages[state.mode] || 'Sua gatinha está pronta...';
+            
+            const paws = '🐾'.repeat(state.sessions_completed % 4) + 
+                         '⚪'.repeat(4 - (state.sessions_completed % 4));
+            document.getElementById('sessionDisplay').textContent = paws;
+
+            // Atualiza tempo de água
+            const waterTime = await window.pywebview.api.get_water_time();
+            const waterMins = Math.floor(waterTime / 60);
+            const waterSecs = waterTime % 60;
+            document.getElementById('waterTimer').textContent = 
+                `${String(waterMins).padStart(2, '0')}:${String(waterSecs).padStart(2, '0')}`;
+        }
+
+        // Notificações
+        function showNotification(title, message) {
+            document.getElementById('notifTitle').textContent = title;
+            document.getElementById('notifMessage').textContent = message;
+            document.getElementById('notification').classList.add('active');
+            
+            setTimeout(() => {
+                document.getElementById('notification').classList.remove('active');
+            }, 6000);
+        }
+
+        // Funções chamadas pelo Python
+        eel.expose(update_display);
+        function update_display(mins, secs, mode) {
+            document.getElementById('timeDisplay').textContent = 
+                `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            document.getElementById('statusText').textContent = statusMessages[mode];
+        }
+
+        eel.expose(show_message);
+        function show_message(title, message) {
+            showNotification(title, message);
+            setCatState('angry', 2000);
+        }
+
+        eel.expose(play_notification_sound);
+        function play_notification_sound() {
+            document.getElementById('notificationSound').play();
+        }
+
+        eel.expose(trigger_water_reminder);
+        function trigger_water_reminder() {
+            showNotification('💧 Hora de beber água!', 'Mantenha-se hidratado!');
+            setCatState('angry', 2000);
+            play_notification_sound();
+        }
+
+        // Controles da janela
+        function minimizeWindow() {
+            // PyWebView não suporta minimize em frameless
+            // Alternativa: esconder temporariamente
+            try {
+                window.pywebview.api.minimize_window?.();
+            } catch(e) {
+                console.log('Minimize não disponível');
+            }
+        }
+
+        function closeWindow() {
+            try {
+                window.pywebview.api.close_window?.();
+            } catch(e) {
+                window.close();
+            }
+        }
+
+        // Inicialização - espera pywebview estar pronto
+        window.addEventListener('pywebviewready', function() {
+            updateTimerDisplay();
+            setInterval(updateTimerDisplay, 1000);
+        });
+    </script>
+</body>
+</html>
